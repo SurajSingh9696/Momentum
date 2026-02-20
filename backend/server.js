@@ -19,7 +19,7 @@ app.set('trust proxy', 1);
 // Set CLIENT_ORIGIN in your Render env to your Vercel URL.
 // Multiple origins can be comma-separated:
 //   CLIENT_ORIGIN=https://momentum.vercel.app,http://localhost:5173
-const allowedOrigins = ('https://momentum-habit-tracker-plum.vercel.app/')
+const allowedOrigins = ('https://momentum-habit-tracker-plum.vercel.app')
     .split(',')
     .map((o) => o.trim());
 
