@@ -1,444 +1,429 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
+import api from '../utils/api';
+import Wireframe3D from '../components/Wireframe3D';
+import TiltCard from '../components/TiltCard';
 
-const Challenges = () => {
-  const { toggleTheme } = useTheme();
-  const [selectedCategory, setSelectedCategory] = useState('all');
 
-  const categories = [
-    { id: 'all', label: 'All' },
-    { id: 'health', label: 'Health' },
-    { id: 'productivity', label: 'Productivity' },
-    { id: 'mindset', label: 'Mindset' },
-  ];
+// ─── Create Challenge Modal ───────────────────────────────────────────────────
+const CreateChallengeModal = ({ onClose, onCreate }) => {
+  const [form, setForm] = useState({ title: '', description: '', icon: 'emoji_events', category: 'health', difficulty: 'medium', duration: 30, maxParticipants: 100 });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const challenges = [
-    {
-      id: 1,
-      category: 'health',
-      title: '30 Days of Morning Yoga',
-      description:
-        'A beginner-friendly flow designed to wake up your body and focus your mind for the day ahead.',
-      image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800',
-      participants: 1200,
-      progress: 65,
-      joined: true,
-      color: 'primary',
-    },
-    {
-      id: 2,
-      category: 'productivity',
-      title: 'Deep Work Sprint',
-      description:
-        'Master your focus with daily 45-minute distraction-free blocks. Perfect for complex projects.',
-      image: 'https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=800',
-      participants: 850,
-      progress: 0,
-      joined: false,
-      color: 'orange',
-    },
-    {
-      id: 3,
-      category: 'mindset',
-      title: 'Gratitude Journaling',
-      description:
-        'Five minutes of daily reflection to rewire your brain for positivity and long-term well-being.',
-      image: 'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?w=800',
-      participants: 2100,
-      progress: 0,
-      joined: false,
-      color: 'purple',
-    },
-    {
-      id: 4,
-      category: 'health',
-      title: 'Strength Foundations',
-      description:
-        'Build a solid base with bodyweight movements. No equipment needed, just your dedication.',
-      image: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800',
-      participants: 540,
-      progress: 0,
-      joined: false,
-      color: 'primary',
-    },
-    {
-      id: 5,
-      category: 'productivity',
-      title: 'Inbox Zero Mastery',
-      description:
-        'Clean up your digital life. Strategies to process emails quickly and reduce digital clutter.',
-      image: 'https://images.unsplash.com/photo-1563986768494-4dee2763ff3f?w=800',
-      participants: 2800,
-      progress: 12,
-      joined: true,
-      color: 'orange',
-    },
-  ];
+  const icons = ['emoji_events', 'fitness_center', 'self_improvement', 'menu_book', 'directions_run', 'water_drop', 'code', 'bedtime'];
+  const categories = ['fitness', 'mindfulness', 'productivity', 'social', 'learning', 'health'];
+  const difficulties = ['easy', 'medium', 'hard'];
 
-  const filteredChallenges =
-    selectedCategory === 'all'
-      ? challenges
-      : challenges.filter((c) => c.category === selectedCategory);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const res = await api.post('/challenges', form);
+      onCreate(res.data.challenge);
+      onClose();
+    } catch (err) {
+      setError(err.response?.data?.message || err.response?.data?.errors?.[0]?.msg || 'Failed to create challenge');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen">
-      {/* Top Navigation Bar */}
-      <motion.header
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        className="flex items-center justify-between whitespace-nowrap border-b border-solid border-primary/10 px-6 md:px-20 py-4 bg-white/80 backdrop-blur-md sticky top-0 z-50"
+    <motion.div
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0 }}
+        onClick={(e) => e.stopPropagation()}
+        className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md p-6 max-h-[90vh] overflow-y-auto"
       >
-        <div className="flex items-center gap-10">
-          <Link to="/" className="flex items-center gap-3 text-slate-900 dark:text-white">
-            <motion.div
-              whileHover={{ rotate: 360 }}
-              transition={{ duration: 0.5 }}
-              className="size-8 bg-primary rounded-lg flex items-center justify-center text-white"
-            >
-              <span className="material-symbols-outlined">bolt</span>
-            </motion.div>
-            <h2 className="text-xl font-bold leading-tight tracking-tight">
-              Momentum
-            </h2>
-          </Link>
-
-          <nav className="hidden md:flex items-center gap-8">
-            <Link
-              to="/challenges"
-              className="text-primary text-sm font-semibold leading-normal"
-            >
-              Explore
-            </Link>
-            <Link
-              to="/dashboard"
-              className="text-slate-600 dark:text-slate-400 hover:text-primary transition-colors text-sm font-medium leading-normal"
-            >
-                Dashboard
-            </Link>
-            <Link
-              to="/community"
-              className="text-slate-600 dark:text-slate-400 hover:text-primary transition-colors text-sm font-medium leading-normal"
-            >
-              Community
-            </Link>
-            <Link
-              to="/profile"
-              className="text-slate-600 dark:text-slate-400 hover:text-primary transition-colors text-sm font-medium leading-normal"
-            >
-              Profile
-            </Link>
-          </nav>
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white">Create Challenge</h2>
+          <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full">
+            <span className="material-symbols-outlined text-slate-500">close</span>
+          </button>
         </div>
-
-        <div className="flex flex-1 justify-end gap-6 items-center">
-          <label className="hidden lg:flex flex-col min-w-40 h-10 max-w-64">
-            <div className="flex w-full flex-1 items-stretch rounded-full h-full bg-primary/10 overflow-hidden">
-              <div className="text-primary flex items-center justify-center pl-4">
-                <span className="material-symbols-outlined text-xl">search</span>
-              </div>
-              <input
-                className="form-input flex w-full min-w-0 flex-1 border-none bg-transparent focus:ring-0 h-full placeholder:text-primary/60 px-2 text-sm font-normal"
-                placeholder="Search challenges..."
-              />
+        {error && <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg text-sm font-medium">{error}</div>}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Title*</label>
+            <input type="text" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required
+              className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50" placeholder="e.g. 30 Day Running Challenge" />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Description*</label>
+            <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} required rows={3}
+              className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none" placeholder="Describe your challenge..." />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Category*</label>
+              <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}
+                className="w-full px-3 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50 capitalize">
+                {categories.map((c) => <option key={c} value={c} className="capitalize">{c}</option>)}
+              </select>
             </div>
-          </label>
-
-          <motion.button
-            whileHover={{ scale: 1.1, rotate: 180 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={toggleTheme}
-            className="size-10 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-primary/10 hover:text-primary transition-all"
-            title="Toggle theme"
-          >
-            <span className="material-symbols-outlined text-[24px]">
-              light_mode
-            </span>
-          </motion.button>
-
-          <Link to="/profile">
-            <motion.div
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              className="flex items-center gap-3"
-            >
-              <div className="size-10 rounded-full border-2 border-primary/20 p-0.5">
-                <div
-                  className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-full"
-                  style={{
-                    backgroundImage:
-                      'url("https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400")',
-                  }}
-                />
-              </div>
-            </motion.div>
-          </Link>
-        </div>
-      </motion.header>
-
-      <main className="flex flex-1 justify-center py-10 px-6 md:px-20">
-        <div className="layout-content-container flex flex-col max-w-[1200px] flex-1">
-          {/* Hero/Header Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col gap-4 mb-8"
-          >
-            <h1 className="text-slate-900 dark:text-white text-4xl md:text-5xl font-black leading-tight tracking-tight">
-              Explore Challenges
-            </h1>
-            <p className="text-slate-600 dark:text-slate-400 text-lg font-normal max-w-2xl">
-              Small steps lead to big changes. Join thousands of people building
-              better habits together.
-            </p>
-          </motion.div>
-
-          {/* Filter Tabs */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="mb-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6"
-          >
-            <div className="flex p-1 bg-white dark:bg-slate-800 border border-primary/10 rounded-full w-fit shadow-sm">
-              {categories.map((category) => (
-                <motion.button
-                  key={category.id}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setSelectedCategory(category.id)}
-                  className={`px-6 py-2 rounded-full text-sm font-bold transition-all relative ${
-                    selectedCategory === category.id
-                      ? 'text-white'
-                      : 'text-slate-600 dark:text-slate-400 hover:bg-primary/5'
-                  }`}
-                >
-                  {selectedCategory === category.id && (
-                    <motion.div
-                      layoutId="activeCategory"
-                      className="absolute inset-0 bg-primary rounded-full shadow-sm"
-                      transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                    />
-                  )}
-                  <span className="relative z-10">{category.label}</span>
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Difficulty</label>
+              <select value={form.difficulty} onChange={(e) => setForm({ ...form, difficulty: e.target.value })}
+                className="w-full px-3 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50 capitalize">
+                {difficulties.map((d) => <option key={d} value={d} className="capitalize">{d}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Duration (days)*</label>
+              <input type="number" min="1" max="365" value={form.duration} onChange={(e) => setForm({ ...form, duration: parseInt(e.target.value) })}
+                className="w-full px-3 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50" />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Max Participants</label>
+              <input type="number" min="1" max="10000" value={form.maxParticipants} onChange={(e) => setForm({ ...form, maxParticipants: parseInt(e.target.value) })}
+                className="w-full px-3 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50" />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Icon</label>
+            <div className="flex flex-wrap gap-2">
+              {icons.map((icon) => (
+                <motion.button key={icon} type="button" whileHover={{ scale: 1.15 }} whileTap={{ scale: 0.9 }}
+                  onClick={() => setForm({ ...form, icon })}
+                  className={`p-2.5 rounded-xl border-2 transition-all ${form.icon === icon ? 'border-primary bg-primary/10 text-primary' : 'border-slate-200 dark:border-slate-700 text-slate-500'}`}>
+                  <span className="material-symbols-outlined text-lg">{icon}</span>
                 </motion.button>
               ))}
             </div>
+          </div>
+          <motion.button type="submit" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} disabled={loading}
+            className="w-full bg-primary text-white py-3 rounded-xl font-bold shadow-lg shadow-primary/20 disabled:opacity-50">
+            {loading ? 'Creating...' : 'Create Challenge'}
+          </motion.button>
+        </form>
+      </motion.div>
+    </motion.div>
+  );
+};
 
-            <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 text-sm font-medium">
-              <span>Sort by:</span>
-              <button className="flex items-center gap-1 font-bold text-slate-900 dark:text-white">
-                Popular{' '}
-                <span className="material-symbols-outlined text-sm">
-                  expand_more
-                </span>
-              </button>
+// ─── Challenges Page ──────────────────────────────────────────────────────────
+const CATEGORY_IMAGES = {
+  fitness: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800',
+  mindfulness: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800',
+  productivity: 'https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=800',
+  social: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800',
+  learning: 'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=800',
+  health: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800',
+};
+
+const Challenges = () => {
+  const { isAuthenticated, user } = useAuth();
+  const [challenges, setChallenges] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [joiningId, setJoiningId] = useState(null);
+  const [likingId, setLikingId] = useState(null);
+  const [wishlistingId, setWishlistingId] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+
+  const categories = [
+    { id: 'all', label: 'All' },
+    { id: 'fitness', label: 'Fitness' },
+    { id: 'mindfulness', label: 'Mindfulness' },
+    { id: 'productivity', label: 'Productivity' },
+    { id: 'health', label: 'Health' },
+    { id: 'learning', label: 'Learning' },
+  ];
+
+  useEffect(() => { fetchChallenges(); }, []);
+
+  const fetchChallenges = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const res = await api.get('/challenges');
+      setChallenges(res.data.challenges || []);
+    } catch (err) {
+      setError('Failed to load challenges. Make sure the backend is running.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleJoinLeave = async (challenge) => {
+    if (!isAuthenticated) { window.location.href = '/auth'; return; }
+    const isJoined = challenge.participants?.some((p) => p === user?.id || p?._id === user?.id || p?.toString() === user?.id);
+    setJoiningId(challenge._id);
+    try {
+      const endpoint = isJoined ? `/challenges/${challenge._id}/leave` : `/challenges/${challenge._id}/join`;
+      await api.post(endpoint);
+      await fetchChallenges();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Action failed');
+    } finally {
+      setJoiningId(null);
+    }
+  };
+
+  const isUserJoined = (challenge) => {
+    if (!user) return false;
+    return challenge.participants?.some((p) => p === user?.id || p?._id === user?.id || p?.toString() === user?.id);
+  };
+
+  const isUserLiked = (challenge) => {
+    if (!user) return false;
+    return challenge.likes?.some((p) => p === user?.id || p?._id === user?.id || p?.toString() === user?.id);
+  };
+
+  const isUserWishlisted = (challenge) => {
+    if (!user) return false;
+    return challenge.wishlisted?.some((p) => p === user?.id || p?._id === user?.id || p?.toString() === user?.id);
+  };
+
+  const handleLike = async (challenge) => {
+    if (!isAuthenticated) { window.location.href = '/auth'; return; }
+    setLikingId(challenge._id);
+    try {
+      const res = await api.post(`/challenges/${challenge._id}/like`);
+      setChallenges((prev) => prev.map((c) => c._id === challenge._id ? res.data.challenge : c));
+    } catch (err) {
+      /* ignore */
+    } finally {
+      setLikingId(null);
+    }
+  };
+
+  const handleWishlist = async (challenge) => {
+    if (!isAuthenticated) { window.location.href = '/auth'; return; }
+    setWishlistingId(challenge._id);
+    try {
+      const res = await api.post(`/challenges/${challenge._id}/wishlist`);
+      setChallenges((prev) => prev.map((c) => c._id === challenge._id ? res.data.challenge : c));
+    } catch (err) {
+      /* ignore */
+    } finally {
+      setWishlistingId(null);
+    }
+  };
+
+  const filtered = selectedCategory === 'all'
+    ? challenges
+    : challenges.filter((c) => c.category === selectedCategory);
+
+  const difficultyColor = { easy: 'text-green-500 bg-green-50 dark:bg-green-900/20', medium: 'text-orange-500 bg-orange-50 dark:bg-orange-900/20', hard: 'text-red-500 bg-red-50 dark:bg-red-900/20' };
+
+
+  return (
+    <main className="max-w-[1200px] mx-auto px-4 sm:px-6 py-8">
+      {/* 3D Hero Banner */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+        className="relative mb-10 overflow-hidden rounded-3xl bg-gradient-to-br from-primary/15 via-slate-50 to-emerald-50 dark:from-primary/20 dark:via-slate-900 dark:to-slate-800 border border-primary/10 p-6 sm:p-8 min-h-[180px]">
+        {/* Grid texture overlay */}
+        <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05]"
+          style={{ backgroundImage: 'linear-gradient(rgba(74,222,128,1) 1px, transparent 1px), linear-gradient(90deg, rgba(74,222,128,1) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
+        {/* Glow orb */}
+        <div className="absolute -top-10 -right-10 w-52 h-52 bg-primary/20 rounded-full blur-3xl pointer-events-none" />
+        {/* 3D Octahedron */}
+        <div className="absolute right-0 top-0 bottom-0 w-56 sm:w-64 opacity-80 dark:opacity-60 pointer-events-none">
+          <Wireframe3D shape="octahedron" color="#4ade80" speed={1.4} />
+        </div>
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <p className="text-primary text-xs font-bold uppercase tracking-widest mb-2 flex items-center gap-1.5">
+              <span className="material-symbols-outlined text-sm">explore</span>Community Challenges
+            </p>
+            <h1 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight">Explore Challenges</h1>
+            <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm">Join the community and build better habits together.</p>
+            {/* Mini stats */}
+            <div className="flex items-center gap-4 mt-3">
+              <span className="text-xs font-bold text-slate-500 flex items-center gap-1">
+                <span className="w-2 h-2 bg-primary rounded-full inline-block animate-pulse" />
+                {challenges.length} challenges live
+              </span>
+              <span className="text-xs font-bold text-slate-500 flex items-center gap-1">
+                <span className="material-symbols-outlined text-[14px] text-primary">group</span>
+                {challenges.reduce((a, c) => a + (c.participants?.length || 0), 0)} participants
+              </span>
             </div>
-          </motion.div>
+          </div>
+          {isAuthenticated && (
+            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+              onClick={() => setShowModal(true)}
+              className="flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-full font-bold shadow-lg shadow-primary/20 shrink-0 self-start sm:self-auto">
+              <span className="material-symbols-outlined">add</span>
+              Create Challenge
+            </motion.button>
+          )}
+        </div>
+      </motion.div>
 
-          {/* Challenge Grid */}
-          <motion.div
-            layout
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-          >
-            <AnimatePresence mode="popLayout">
-              {filteredChallenges.map((challenge, index) => (
-                <motion.div
-                  key={challenge.id}
-                  layout
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  transition={{ delay: index * 0.1 }}
-                  whileHover={{ y: -10 }}
-                  className="group flex flex-col bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-xl hover:border-primary/30 transition-all duration-300 overflow-hidden"
-                >
-                  <div className="relative h-48 overflow-hidden">
-                    <motion.div
-                      whileHover={{ scale: 1.1 }}
-                      transition={{ duration: 0.5 }}
-                      className="absolute inset-0 bg-center bg-no-repeat bg-cover"
-                      style={{ backgroundImage: `url(${challenge.image})` }}
-                    />
-                    <div
-                      className={`absolute top-4 left-4 bg-${challenge.color === 'primary' ? 'primary' : challenge.color === 'orange' ? 'orange' : 'purple'}-400/90 backdrop-blur-sm text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider`}
-                    >
-                      {challenge.category}
-                    </div>
-                    <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm text-slate-900 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
-                      <span className="material-symbols-outlined text-xs">
-                        group
-                      </span>{' '}
-                      {challenge.participants}
-                    </div>
-                  </div>
+      {/* Error */}
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl flex items-center gap-3">
+          <span className="material-symbols-outlined text-red-500">error</span>
+          <p className="text-red-600 dark:text-red-400 font-medium text-sm">{error}</p>
+          <button onClick={fetchChallenges} className="ml-auto text-sm font-bold text-red-500 hover:underline">Retry</button>
+        </div>
+      )}
 
-                  <div className="p-6 flex flex-col flex-1">
-                    <h3 className="text-slate-900 dark:text-white text-xl font-bold mb-2">
-                      {challenge.title}
-                    </h3>
-                    <p className="text-slate-600 dark:text-slate-400 text-sm font-normal leading-relaxed mb-6">
-                      {challenge.description}
-                    </p>
 
-                    <div className="mt-auto">
-                      {challenge.joined ? (
-                        <>
-                          <div className="flex justify-between items-center mb-2">
-                            <span className="text-xs font-bold text-primary">
-                              Progress
-                            </span>
-                            <span className="text-xs font-bold text-slate-900 dark:text-white">
-                              {challenge.progress}%
-                            </span>
-                          </div>
-                          <div className="w-full bg-primary/10 h-2 rounded-full mb-6 overflow-hidden">
-                            <motion.div
-                              initial={{ width: 0 }}
-                              animate={{ width: `${challenge.progress}%` }}
-                              transition={{ delay: 0.5 + index * 0.1, duration: 1 }}
-                              className="bg-primary h-full rounded-full"
-                            />
-                          </div>
-                          <Link to="/dashboard">
-                            <motion.button
-                              whileHover={{ scale: 1.02 }}
-                              whileTap={{ scale: 0.98 }}
-                              className="w-full bg-primary/10 hover:bg-primary/20 text-slate-900 dark:text-white font-bold py-3 rounded-full transition-colors flex items-center justify-center gap-2"
-                            >
-                              <span className="material-symbols-outlined text-lg">
-                                visibility
-                              </span>
-                              View Progress
-                            </motion.button>
-                          </Link>
-                        </>
-                      ) : (
-                        <motion.button
-                          whileHover={{ scale: 1.02, y: -2 }}
-                          whileTap={{ scale: 0.98 }}
-                          className="w-full bg-primary hover:bg-primary/90 text-white font-bold py-3 rounded-full shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2"
-                        >
-                          <span className="material-symbols-outlined text-lg">
-                            add_circle
-                          </span>
-                          Join Challenge
-                        </motion.button>
+      {/* Category Filter */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+        className="mb-8 flex flex-wrap gap-2">
+        {categories.map((cat) => (
+          <motion.button key={cat.id} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+            onClick={() => setSelectedCategory(cat.id)}
+            className={`px-5 py-2 rounded-full text-sm font-bold transition-all ${selectedCategory === cat.id
+              ? 'bg-primary text-white shadow-md shadow-primary/20'
+              : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-primary/40'
+              }`}>
+            {cat.label}
+          </motion.button>
+        ))}
+      </motion.div>
+
+      {/* Challenges Grid */}
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="h-72 bg-slate-100 dark:bg-slate-800 rounded-2xl animate-pulse" />
+          ))}
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="text-center py-20">
+          <span className="material-symbols-outlined text-6xl text-slate-300 dark:text-slate-600 block mb-4">explore</span>
+          <p className="text-slate-500 text-lg font-medium">
+            {challenges.length === 0 ? 'No challenges yet. Be the first to create one!' : 'No challenges in this category.'}
+          </p>
+          {isAuthenticated && challenges.length === 0 && (
+            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+              onClick={() => setShowModal(true)}
+              className="mt-4 bg-primary text-white px-6 py-2.5 rounded-full font-bold shadow-lg shadow-primary/20">
+              + Create First Challenge
+            </motion.button>
+          )}
+        </div>
+      ) : (
+        <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <AnimatePresence mode="popLayout">
+            {filtered.map((challenge, index) => {
+              const joined = isUserJoined(challenge);
+              const imgSrc = CATEGORY_IMAGES[challenge.category] || CATEGORY_IMAGES.health;
+
+              return (
+                <TiltCard key={challenge._id} intensity={8} scale={1.02}
+                  className="group flex flex-col bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-2xl hover:border-primary/30 transition-all duration-300 overflow-hidden">
+
+                  {/* Image */}
+                  <div className="relative h-44 overflow-hidden">
+                    <motion.div whileHover={{ scale: 1.08 }} transition={{ duration: 0.5 }}
+                      className="absolute inset-0 bg-cover bg-center"
+                      style={{ backgroundImage: `url(${imgSrc})` }}>
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                    </motion.div>
+                    <div className="absolute top-3 left-3 flex items-center gap-2">
+                      <span className="bg-primary/90 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider capitalize">{challenge.category}</span>
+                      {challenge.difficulty && (
+                        <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider capitalize backdrop-blur-sm ${difficultyColor[challenge.difficulty] || 'text-slate-500 bg-white/80'}`}>
+                          {challenge.difficulty}
+                        </span>
                       )}
                     </div>
+                    <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm text-slate-900 text-xs font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                      <span className="material-symbols-outlined text-xs">group</span>
+                      {challenge.participants?.length || 0}
+                    </div>
+                    {joined && (
+                      <div className="absolute bottom-3 right-3 bg-primary text-white text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[12px]">check</span>
+                        Joined
+                      </div>
+                    )}
                   </div>
-                </motion.div>
-              ))}
 
-              {/* Create Challenge Card */}
-              <motion.div
-                layout
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                whileHover={{ scale: 1.05 }}
-                className="flex flex-col bg-primary/10 rounded-xl border-2 border-dashed border-primary/30 items-center justify-center p-8 text-center gap-4 cursor-pointer"
-              >
-                <motion.div
-                  whileHover={{ rotate: 360 }}
-                  transition={{ duration: 0.6 }}
-                  className="size-16 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center text-primary shadow-sm"
-                >
-                  <span className="material-symbols-outlined text-3xl">
-                    psychology
-                  </span>
-                </motion.div>
-                <div>
-                  <h3 className="text-slate-900 dark:text-white text-lg font-bold">
-                    Have a better idea?
-                  </h3>
-                  <p className="text-slate-600 dark:text-slate-400 text-sm font-normal mt-1">
-                    Create your own challenge and invite the community to join
-                    you.
-                  </p>
-                </div>
-                <button className="mt-4 px-8 py-3 bg-white dark:bg-slate-800 hover:bg-slate-50 text-slate-900 dark:text-white font-bold rounded-full transition-all border border-primary/20">
-                  Create Challenge
-                </button>
-              </motion.div>
-            </AnimatePresence>
-          </motion.div>
+                  {/* Content */}
+                  <div className="p-5 flex flex-col flex-1">
+                    <div className="flex items-start gap-2 mb-2">
+                      <span className="material-symbols-outlined text-primary text-xl mt-0.5">{challenge.icon || 'emoji_events'}</span>
+                      <h3 className="text-slate-900 dark:text-white text-lg font-bold leading-snug">{challenge.title}</h3>
+                    </div>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-4 flex-1 line-clamp-2">{challenge.description}</p>
 
-          {/* Pagination */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.8 }}
-            className="mt-16 flex justify-center items-center gap-4"
-          >
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              className="size-10 rounded-full border border-primary/20 flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-colors"
-            >
-              <span className="material-symbols-outlined">chevron_left</span>
-            </motion.button>
-            <div className="flex gap-2">
-              <button className="size-10 rounded-full bg-primary text-white font-bold flex items-center justify-center">
-                1
-              </button>
-              <button className="size-10 rounded-full hover:bg-primary/10 text-slate-600 dark:text-slate-400 font-bold flex items-center justify-center transition-colors">
-                2
-              </button>
-              <button className="size-10 rounded-full hover:bg-primary/10 text-slate-600 dark:text-slate-400 font-bold flex items-center justify-center transition-colors">
-                3
-              </button>
-            </div>
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              className="size-10 rounded-full border border-primary/20 flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-colors"
-            >
-              <span className="material-symbols-outlined">chevron_right</span>
-            </motion.button>
-          </motion.div>
-        </div>
-      </main>
+                    {/* Stats row — visible to everyone */}
+                    <div className="flex items-center gap-3 text-xs text-slate-400 mb-4">
+                      <span className="flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[14px]">schedule</span>{challenge.duration} days
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[14px] text-primary">group</span>
+                        {challenge.participants?.length || 0} joined
+                      </span>
+                      <span className="flex items-center gap-1 ml-auto">
+                        <span className="material-symbols-outlined text-[14px] text-rose-400">favorite</span>
+                        {challenge.likes?.length || 0}
+                      </span>
+                    </div>
 
-      {/* Footer */}
-      <footer className="bg-white dark:bg-slate-800 border-t border-primary/10 py-8 px-6 md:px-20 mt-10">
-        <div className="max-w-[1200px] mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex items-center gap-4">
-            <div className="size-12 rounded-full bg-primary/20 flex items-center justify-center text-primary">
-              <span className="material-symbols-outlined">auto_awesome</span>
-            </div>
-            <div>
-              <p className="text-slate-900 dark:text-white font-bold">
-                Tip of the day
-              </p>
-              <p className="text-slate-600 dark:text-slate-400 text-sm">
-                Consistency is more important than intensity. Keep showing up!
-              </p>
-            </div>
-          </div>
-          <div className="flex gap-8 text-slate-600 dark:text-slate-400 text-xs font-medium">
-            <a
-              className="hover:text-primary transition-colors uppercase tracking-widest"
-              href="#"
-            >
-              Privacy Policy
-            </a>
-            <a
-              className="hover:text-primary transition-colors uppercase tracking-widest"
-              href="#"
-            >
-              Help Center
-            </a>
-            <a
-              className="hover:text-primary transition-colors uppercase tracking-widest"
-              href="#"
-            >
-              Discord Community
-            </a>
-          </div>
-        </div>
-      </footer>
-    </div>
+                    {/* Action row */}
+                    <div className="flex gap-2">
+                      {/* Join/Leave */}
+                      <motion.button whileHover={{ scale: 1.02, y: -1 }} whileTap={{ scale: 0.98 }}
+                        onClick={() => handleJoinLeave(challenge)}
+                        disabled={joiningId === challenge._id}
+                        className={`flex-1 py-2.5 rounded-full font-bold text-sm transition-all flex items-center justify-center gap-1.5 ${joined
+                          ? 'bg-red-50 dark:bg-red-900/20 text-red-500 border border-red-200 dark:border-red-800 hover:bg-red-100'
+                          : 'bg-primary text-white shadow-md shadow-primary/20 hover:bg-primary/90'
+                          } disabled:opacity-50`}>
+                        {joiningId === challenge._id
+                          ? <><span className="material-symbols-outlined text-sm animate-spin">refresh</span> Processing...</>
+                          : joined
+                            ? <><span className="material-symbols-outlined text-sm">logout</span> Leave</>
+                            : <><span className="material-symbols-outlined text-sm">add_circle</span> Join</>
+                        }
+                      </motion.button>
+
+                      {/* Like button */}
+                      <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.85 }}
+                        onClick={() => handleLike(challenge)}
+                        disabled={likingId === challenge._id}
+                        title={isAuthenticated ? (isUserLiked(challenge) ? 'Unlike' : 'Like') : 'Sign in to like'}
+                        className={`w-11 h-11 rounded-full flex items-center justify-center border transition-all disabled:opacity-50 ${isUserLiked(challenge)
+                          ? 'bg-rose-50 dark:bg-rose-900/20 border-rose-300 dark:border-rose-700 text-rose-500'
+                          : 'bg-slate-50 dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-400 hover:border-rose-300 hover:text-rose-400'
+                          }`}>
+                        <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: isUserLiked(challenge) ? "'FILL' 1" : "'FILL' 0" }}>favorite</span>
+                      </motion.button>
+
+                      {/* Wishlist button */}
+                      <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.85 }}
+                        onClick={() => handleWishlist(challenge)}
+                        disabled={wishlistingId === challenge._id}
+                        title={isAuthenticated ? (isUserWishlisted(challenge) ? 'Remove from wishlist' : 'Save to wishlist') : 'Sign in to save'}
+                        className={`w-11 h-11 rounded-full flex items-center justify-center border transition-all disabled:opacity-50 ${isUserWishlisted(challenge)
+                          ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-300 dark:border-amber-700 text-amber-500'
+                          : 'bg-slate-50 dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-400 hover:border-amber-300 hover:text-amber-400'
+                          }`}>
+                        <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: isUserWishlisted(challenge) ? "'FILL' 1" : "'FILL' 0" }}>bookmark</span>
+                      </motion.button>
+                    </div>
+                  </div>
+
+                </TiltCard>
+              );
+            })}
+          </AnimatePresence>
+        </motion.div>
+      )}
+
+      {/* Create Modal */}
+      <AnimatePresence>
+        {showModal && <CreateChallengeModal onClose={() => setShowModal(false)} onCreate={(c) => setChallenges((prev) => [c, ...prev])} />}
+      </AnimatePresence>
+    </main>
   );
 };
 

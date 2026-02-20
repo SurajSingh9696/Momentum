@@ -70,14 +70,14 @@ const Landing = () => {
           style={{ opacity, scale }}
           className="relative overflow-hidden pt-20 pb-24 px-6 min-h-screen flex items-center"
         >
-          {/* 3D Background */}
-          <div className="absolute inset-0 opacity-20 dark:opacity-10">
-            <Scene3D />
+          {/* Subtle background particles (NOT the 3D shape — that lives in the right column) */}
+          <div className="absolute inset-0 opacity-10 dark:opacity-15 pointer-events-none">
+            <canvas id="bg-particles" className="w-full h-full" />
           </div>
 
           {/* Gradient Orbs */}
           <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl animate-float"></div>
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-emerald-300/20 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }}></div>
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-emerald-300/15 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }}></div>
 
           <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center relative z-10">
             <motion.div
@@ -145,88 +145,51 @@ const Landing = () => {
               </motion.div>
             </motion.div>
 
-            {/* Dashboard Preview Card */}
+            {/* 3D Spinning Shape — the hero visual */}
             <motion.div
-              initial={{ x: 100, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.5, duration: 0.8 }}
-              className="relative hidden lg:block"
+              initial={{ opacity: 0, scale: 0.6 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.4, duration: 1, ease: 'easeOut' }}
+              className="relative flex items-center justify-center"
             >
-              <motion.div
-                whileHover={{ scale: 1.02 }}
-                transition={{ type: 'spring', stiffness: 300 }}
-                className="relative z-10 w-full max-w-[500px] ml-auto bg-white dark:bg-slate-800 rounded-xl shadow-2xl p-6 border border-primary/10"
-              >
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="font-bold text-lg">My Routine</h3>
-                  <span className="material-symbols-outlined text-primary">
-                    calendar_month
-                  </span>
-                </div>
+              {/* Outer glow ring */}
+              <div className="absolute w-[420px] h-[420px] rounded-full bg-primary/10 blur-3xl" />
+              <div className="absolute w-[280px] h-[280px] rounded-full bg-emerald-300/15 blur-2xl" />
 
-                <div className="space-y-4">
-                  {[
-                    { icon: 'water_drop', color: 'primary', progress: 75, label: 'Drink 2L Water' },
-                    { icon: 'fitness_center', color: 'orange', progress: 40, label: 'Morning Run • 4/10 km' },
-                    { icon: 'check', color: 'primary', progress: 100, label: 'Read 20 Pages • Completed', completed: true },
-                  ].map((item, index) => (
-                    <motion.div
-                      key={index}
-                      initial={{ x: -50, opacity: 0 }}
-                      animate={{ x: 0, opacity: 1 }}
-                      transition={{ delay: 0.7 + index * 0.1 }}
-                      className={`flex items-center gap-4 p-4 bg-background-light dark:bg-slate-700 rounded-lg ${
-                        item.completed ? 'border-2 border-primary' : ''
-                      }`}
-                    >
-                      <div
-                        className={`w-10 h-10 ${
-                          item.color === 'primary'
-                            ? 'bg-primary/20 text-primary'
-                            : 'bg-orange-400/20 text-orange-400'
-                        } ${
-                          item.completed ? 'bg-primary text-white' : ''
-                        } rounded-full flex items-center justify-center`}
-                      >
-                        <span className="material-symbols-outlined">
-                          {item.icon}
-                        </span>
-                      </div>
-                      <div className="flex-1">
-                        <div className="h-2 w-full bg-slate-200 dark:bg-slate-600 rounded-full overflow-hidden mb-2">
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${item.progress}%` }}
-                            transition={{ delay: 1 + index * 0.1, duration: 1 }}
-                            className={`h-full ${
-                              item.color === 'primary'
-                                ? 'bg-primary'
-                                : 'bg-orange-400'
-                            }`}
-                          />
-                        </div>
-                        <p className="text-xs font-medium opacity-70">
-                          {item.label}
-                        </p>
-                      </div>
-                    </motion.div>
-                  ))}
+              {/* The 3D canvas — big and prominent */}
+              <div className="relative w-[440px] h-[440px] max-w-full">
+                <Scene3D color="#4ade80" size={440} />
+              </div>
+
+              {/* Floating badge — streak */}
+              <motion.div
+                animate={{ y: [0, -12, 0] }}
+                transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                className="absolute -bottom-4 -left-4 bg-white dark:bg-slate-800 border border-primary/20 shadow-xl rounded-2xl px-4 py-3 flex items-center gap-3"
+              >
+                <div className="w-10 h-10 bg-orange-100 dark:bg-orange-900/30 rounded-xl flex items-center justify-center">
+                  <span className="material-symbols-outlined text-orange-500">local_fire_department</span>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 font-semibold">Current Streak</p>
+                  <p className="text-lg font-black text-slate-900 dark:text-white">14 days 🔥</p>
                 </div>
               </motion.div>
 
-              {/* Floating elements */}
+              {/* Floating badge — completion */}
               <motion.div
-                animate={{
-                  y: [0, -20, 0],
-                  rotate: [0, 5, 0],
-                }}
-                transition={{
-                  duration: 4,
-                  repeat: Infinity,
-                  ease: 'easeInOut',
-                }}
-                className="absolute -top-10 -right-10 w-20 h-20 bg-primary/20 rounded-full blur-xl"
-              />
+                animate={{ y: [0, 10, 0] }}
+                transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
+                className="absolute -top-4 -right-4 bg-white dark:bg-slate-800 border border-primary/20 shadow-xl rounded-2xl px-4 py-3 flex items-center gap-3"
+              >
+                <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
+                  <span className="material-symbols-outlined text-primary">task_alt</span>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 font-semibold">Today</p>
+                  <p className="text-lg font-black text-slate-900 dark:text-white">4/5 done ✓</p>
+                </div>
+              </motion.div>
             </motion.div>
           </div>
         </motion.section>
