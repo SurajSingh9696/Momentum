@@ -12,6 +12,12 @@ import Dashboard from './pages/Dashboard';
 import Challenges from './pages/Challenges';
 import Community from './pages/Community';
 import Profile from './pages/Profile';
+import Pricing from './pages/Pricing';
+import Integrations from './pages/Integrations';
+import SuccessStories from './pages/SuccessStories';
+import About from './pages/About';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import Contact from './pages/Contact';
 
 function AnimatedRoutes() {
     const location = useLocation();
@@ -30,6 +36,14 @@ function AnimatedRoutes() {
                 <Route path="/challenges" element={<Layout><Challenges /></Layout>} />
                 <Route path="/community" element={<Layout><Community /></Layout>} />
                 <Route path="/profile" element={<Layout><Profile /></Layout>} />
+
+                {/* Footer pages */}
+                <Route path="/pricing" element={<Pricing />} />
+                <Route path="/integrations" element={<Integrations />} />
+                <Route path="/success-stories" element={<SuccessStories />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/privacy" element={<PrivacyPolicy />} />
+                <Route path="/contact" element={<Contact />} />
             </Routes>
         </AnimatePresence>
     );
