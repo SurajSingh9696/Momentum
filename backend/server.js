@@ -2,6 +2,8 @@ import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import authRoutes from './routes/auth.js';
 import habitRoutes from './routes/habits.js';
 import challengeRoutes from './routes/challenges.js';
@@ -10,22 +12,23 @@ import postRoutes from './routes/posts.js';
 // Load env vars
 dotenv.config();
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname  = path.dirname(__filename);
+
 const app = express();
 
 // Trust proxy (needed on Render / behind a reverse proxy)
 app.set('trust proxy', 1);
 
 // ─── CORS ────────────────────────────────────────────────────────────────────
-// Set CLIENT_ORIGIN in your Render env to your Vercel URL.
-// Multiple origins can be comma-separated:
-//   CLIENT_ORIGIN=https://momentum.vercel.app,http://localhost:5173
-const allowedOrigins = ('https://momentum-habit-tracker-plum.vercel.app')
-    .split(',')
-    .map((o) => o.trim());
+// Set CLIENT_ORIGIN in Render dashboard (comma-separated for multiple origins).
+// Falls back to allowing localhost for local development.
+const rawOrigins = process.env.CLIENT_ORIGIN || 'http://localhost:5173,http://localhost:3000';
+const allowedOrigins = rawOrigins.split(',').map((o) => o.trim()).filter(Boolean);
 
 app.use(cors({
     origin: (origin, callback) => {
-        // Allow requests with no origin (curl, Postman, mobile)
+        // Allow requests with no origin (curl, Postman, server-to-server)
         if (!origin) return callback(null, true);
         if (allowedOrigins.includes(origin)) return callback(null, true);
         callback(new Error(`CORS: origin '${origin}' not allowed`));
@@ -55,10 +58,21 @@ app.get('/api/health', (req, res) => {
     res.json({ success: true, message: 'Server is running', env: process.env.NODE_ENV });
 });
 
-// 404 handler
-app.use((req, res) => {
-    res.status(404).json({ success: false, message: 'Route not found' });
-});
+// ─── Serve React frontend (production) ──────────────────────────────────────
+// The built frontend lives one level up in dist/ (built from workspace root).
+const DIST = path.join(__dirname, '..', 'dist');
+if (process.env.NODE_ENV === 'production') {
+    app.use(express.static(DIST));
+    // SPA catch-all: any non-API request returns index.html so React Router works
+    app.get('*', (req, res) => {
+        res.sendFile(path.join(DIST, 'index.html'));
+    });
+} else {
+    // Development 404 for API-only server
+    app.use((req, res) => {
+        res.status(404).json({ success: false, message: 'Route not found' });
+    });
+}
 
 // Error handling middleware
 app.use((err, req, res, next) => {
