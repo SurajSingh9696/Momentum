@@ -23,7 +23,7 @@ app.set('trust proxy', 1);
 // ─── CORS ────────────────────────────────────────────────────────────────────
 // Set CLIENT_ORIGIN in Render dashboard (comma-separated for multiple origins).
 // Falls back to allowing localhost for local development.
-const rawOrigins = process.env.CLIENT_ORIGIN || 'http://localhost:5173,http://localhost:3000';
+const rawOrigins = 'https://momentum-community-challenges.vercel.app/';
 const allowedOrigins = rawOrigins.split(',').map((o) => o.trim()).filter(Boolean);
 
 app.use(cors({
