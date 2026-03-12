@@ -22,9 +22,11 @@ app.set('trust proxy', 1);
 
 // ─── CORS ────────────────────────────────────────────────────────────────────
 // Set CLIENT_ORIGIN in Render dashboard (comma-separated for multiple origins).
-// Falls back to allowing localhost for local development.
-const rawOrigins = 'https://momentum-community-challenges.vercel.app/';
-const allowedOrigins = rawOrigins.split(',').map((o) => o.trim()).filter(Boolean);
+// Falls back to the Vercel frontend + localhost for local development.
+const rawOrigins = process.env.CLIENT_ORIGIN ||
+    'https://momentum-community-challenges.vercel.app,http://localhost:5173,http://localhost:3000';
+// Strip any accidental trailing slashes — browsers send origins without them.
+const allowedOrigins = rawOrigins.split(',').map((o) => o.trim().replace(/\/$/, '')).filter(Boolean);
 
 app.use(cors({
     origin: (origin, callback) => {
