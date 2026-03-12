@@ -1,6 +1,6 @@
 /**
- * Scene3D — thin wrapper around Wireframe3D (icosahedron) for Landing page.
- * Kept for backward compatibility.
+ * Scene3D — hero 3D visual for the Landing page.
+ * Uses ParticleGalaxy for a dramatic galaxy-of-particles effect.
  */
-import Wireframe3D from './Wireframe3D';
-export default Wireframe3D;
+import ParticleGalaxy from './ParticleGalaxy';
+export default ParticleGalaxy;

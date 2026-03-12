@@ -4,6 +4,7 @@ import { AnimatePresence } from 'framer-motion';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider } from './context/AuthContext';
 import Layout from './components/Layout';
+import RippleEffect from './components/RippleEffect';
 
 import Landing from './pages/Landing';
 import Authentication from './pages/Authentication';
@@ -40,6 +41,7 @@ function App() {
             <AuthProvider>
                 <Router>
                     <AnimatedRoutes />
+                    <RippleEffect />
                 </Router>
             </AuthProvider>
         </ThemeProvider>
