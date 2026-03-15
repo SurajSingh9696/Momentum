@@ -33,19 +33,19 @@
   /* Smooth scrolling */
   html {
     scroll-behavior: smooth;
+    scrollbar-width: none;
   }
 
-  /* Custom scrollbar */
+  body {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* Hide visible scrollbar while keeping scroll enabled */
   ::-webkit-scrollbar {
-    width: 8px;
-  }
-
-  ::-webkit-scrollbar-track {
-    @apply bg-gray-100 dark:bg-slate-800;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    @apply bg-primary/50 rounded-full hover:bg-primary;
+    width: 0;
+    height: 0;
+    background: transparent;
   }
 }
 

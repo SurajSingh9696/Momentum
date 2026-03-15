@@ -22,6 +22,9 @@ const Community = () => {
   const [error, setError] = useState('');
   const [postContent, setPostContent] = useState('');
   const [likingId, setLikingId] = useState(null);
+  const [commentInputs, setCommentInputs] = useState({});
+  const [commentingId, setCommentingId] = useState(null);
+  const [openComments, setOpenComments] = useState({});
   const textareaRef = useRef(null);
 
   useEffect(() => { fetchPosts(); }, []);
@@ -75,6 +78,36 @@ const Community = () => {
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to delete');
     }
+  };
+
+  const handleCommentChange = (postId, value) => {
+    setCommentInputs((prev) => ({ ...prev, [postId]: value }));
+  };
+
+  const handleComment = async (postId) => {
+    if (!isAuthenticated) {
+      window.location.href = '/auth';
+      return;
+    }
+
+    const text = (commentInputs[postId] || '').trim();
+    if (!text) return;
+
+    setCommentingId(postId);
+    try {
+      const res = await api.post(`/posts/${postId}/comment`, { text });
+      setPosts((prev) => prev.map((p) => (p._id === postId ? res.data.post : p)));
+      setCommentInputs((prev) => ({ ...prev, [postId]: '' }));
+      setOpenComments((prev) => ({ ...prev, [postId]: true }));
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to comment');
+    } finally {
+      setCommentingId(null);
+    }
+  };
+
+  const toggleComments = (postId) => {
+    setOpenComments((prev) => ({ ...prev, [postId]: !prev[postId] }));
   };
 
   const isLiked = (post) => post.likes?.includes(user?.id);
@@ -222,11 +255,64 @@ const Community = () => {
                         <span className={`material-symbols-outlined text-lg ${isLiked(post) ? 'filled-icon' : ''}`}>favorite</span>
                         {post.likes?.length || 0}
                       </motion.button>
-                      <div className="flex items-center gap-2 text-sm font-bold text-slate-400">
+                      <button
+                        onClick={() => toggleComments(post._id)}
+                        className="flex items-center gap-2 text-sm font-bold text-slate-400 hover:text-primary transition-colors"
+                      >
                         <span className="material-symbols-outlined text-lg">chat_bubble</span>
                         {post.comments?.length || 0}
-                      </div>
+                      </button>
                     </div>
+
+                    {/* Comment input */}
+                    <div className="mt-4 flex items-start gap-2">
+                      <textarea
+                        value={commentInputs[post._id] || ''}
+                        onChange={(e) => handleCommentChange(post._id, e.target.value.slice(0, 500))}
+                        placeholder={isAuthenticated ? 'Write a comment...' : 'Sign in to comment...'}
+                        disabled={!isAuthenticated || commentingId === post._id}
+                        rows={2}
+                        className="flex-1 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-slate-800 dark:text-white placeholder:text-slate-400 resize-none focus:outline-none focus:ring-2 focus:ring-primary/40 text-sm"
+                      />
+                      <motion.button
+                        whileHover={{ scale: 1.04 }}
+                        whileTap={{ scale: 0.96 }}
+                        onClick={() => handleComment(post._id)}
+                        disabled={!isAuthenticated || commentingId === post._id || !(commentInputs[post._id] || '').trim()}
+                        className="bg-primary text-background-dark px-4 py-2.5 rounded-xl text-sm font-bold disabled:opacity-40"
+                      >
+                        {commentingId === post._id ? '...' : 'Reply'}
+                      </motion.button>
+                    </div>
+
+                    {/* Comments list */}
+                    {(openComments[post._id] || (post.comments?.length || 0) > 0) && (
+                      <div className="mt-4 space-y-2">
+                        {(post.comments || []).length === 0 ? (
+                          <p className="text-xs text-slate-400">No comments yet.</p>
+                        ) : (
+                          (post.comments || []).map((comment) => (
+                            <div
+                              key={comment._id || `${comment.user?._id || 'u'}-${comment.createdAt}`}
+                              className="rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/10 p-3"
+                            >
+                              <div className="flex items-center gap-2 mb-1.5">
+                                <div className="h-6 w-6 rounded-full overflow-hidden border border-primary/20 bg-primary/10 shrink-0">
+                                  <img
+                                    className="h-full w-full object-cover"
+                                    src={comment.user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(comment.user?.name || 'c')}`}
+                                    alt={comment.user?.name || 'User'}
+                                  />
+                                </div>
+                                <p className="text-xs font-bold text-slate-700 dark:text-slate-200">{comment.user?.name || 'User'}</p>
+                                <p className="text-[11px] text-slate-400">{timeAgo(comment.createdAt)}</p>
+                              </div>
+                              <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{comment.text}</p>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    )}
                   </div>
                 </motion.article>
               ))}

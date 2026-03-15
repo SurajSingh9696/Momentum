@@ -15,12 +15,40 @@ const CreateChallengeModal = ({ onClose, onCreate }) => {
   const icons = ['emoji_events', 'fitness_center', 'self_improvement', 'menu_book', 'directions_run', 'water_drop', 'code', 'bedtime'];
   const categories = ['fitness', 'mindfulness', 'productivity', 'social', 'learning', 'health'];
   const difficulties = ['easy', 'medium', 'hard'];
+  const presets = [
+    { label: '7 Day Kickstart', duration: 7, maxParticipants: 30, difficulty: 'easy' },
+    { label: '30 Day Standard', duration: 30, maxParticipants: 100, difficulty: 'medium' },
+    { label: '90 Day Deep Focus', duration: 90, maxParticipants: 300, difficulty: 'hard' },
+  ];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!form.title.trim()) {
+      setError('Challenge title is required.');
+      return;
+    }
+    if (!form.description.trim()) {
+      setError('Challenge description is required.');
+      return;
+    }
+    if (Number.isNaN(form.duration) || form.duration < 1 || form.duration > 365) {
+      setError('Duration must be between 1 and 365 days.');
+      return;
+    }
+    if (Number.isNaN(form.maxParticipants) || form.maxParticipants < 2 || form.maxParticipants > 10000) {
+      setError('Max participants must be between 2 and 10000.');
+      return;
+    }
+
     setLoading(true);
+    setError('');
     try {
-      const res = await api.post('/challenges', form);
+      const payload = {
+        ...form,
+        title: form.title.trim(),
+        description: form.description.trim(),
+      };
+      const res = await api.post('/challenges', payload);
       onCreate(res.data.challenge);
       onClose();
     } catch (err) {
@@ -39,10 +67,13 @@ const CreateChallengeModal = ({ onClose, onCreate }) => {
       <motion.div
         initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0 }}
         onClick={(e) => e.stopPropagation()}
-        className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md p-6 max-h-[90vh] overflow-y-auto"
+        className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto"
       >
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white">Create Challenge</h2>
+          <div>
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white">Create Challenge</h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Define a clear goal so others can join quickly.</p>
+          </div>
           <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full">
             <span className="material-symbols-outlined text-slate-500">close</span>
           </button>
@@ -50,14 +81,31 @@ const CreateChallengeModal = ({ onClose, onCreate }) => {
         {error && <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg text-sm font-medium">{error}</div>}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
+            <p className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Quick Templates</p>
+            <div className="flex flex-wrap gap-2">
+              {presets.map((preset) => (
+                <button
+                  key={preset.label}
+                  type="button"
+                  onClick={() => setForm({ ...form, duration: preset.duration, maxParticipants: preset.maxParticipants, difficulty: preset.difficulty })}
+                  className="px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-primary/10 hover:text-primary transition-colors"
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
             <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Title*</label>
-            <input type="text" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required
+            <input type="text" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value.slice(0, 80) })} required
               className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50" placeholder="e.g. 30 Day Running Challenge" />
+            <p className="mt-1 text-[11px] text-slate-400">{form.title.length}/80</p>
           </div>
           <div>
             <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Description*</label>
-            <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} required rows={3}
+            <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value.slice(0, 240) })} required rows={4}
               className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none" placeholder="Describe your challenge..." />
+            <p className="mt-1 text-[11px] text-slate-400">{form.description.length}/240</p>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -78,12 +126,12 @@ const CreateChallengeModal = ({ onClose, onCreate }) => {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Duration (days)*</label>
-              <input type="number" min="1" max="365" value={form.duration} onChange={(e) => setForm({ ...form, duration: parseInt(e.target.value) })}
+              <input type="number" min="1" max="365" value={form.duration} onChange={(e) => setForm({ ...form, duration: Number(e.target.value) })}
                 className="w-full px-3 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50" />
             </div>
             <div>
               <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Max Participants</label>
-              <input type="number" min="1" max="10000" value={form.maxParticipants} onChange={(e) => setForm({ ...form, maxParticipants: parseInt(e.target.value) })}
+              <input type="number" min="2" max="10000" value={form.maxParticipants} onChange={(e) => setForm({ ...form, maxParticipants: Number(e.target.value) })}
                 className="w-full px-3 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50" />
             </div>
           </div>
@@ -100,7 +148,7 @@ const CreateChallengeModal = ({ onClose, onCreate }) => {
             </div>
           </div>
           <motion.button type="submit" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} disabled={loading}
-            className="w-full bg-primary text-white py-3 rounded-xl font-bold shadow-lg shadow-primary/20 disabled:opacity-50">
+            className="w-full bg-primary text-background-dark py-3 rounded-xl font-bold shadow-lg shadow-primary/20 disabled:opacity-50">
             {loading ? 'Creating...' : 'Create Challenge'}
           </motion.button>
         </form>
