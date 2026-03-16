@@ -72,7 +72,7 @@ const Header = ({ transparent = false }) => {
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
-            onClick={toggleTheme}
+            onClick={(e) => toggleTheme(e)}
             className="p-2 rounded-full hover:bg-primary/10 transition-colors text-slate-500 dark:text-slate-400 hover:text-primary"
           >
             <span className="material-symbols-outlined dark:hidden">dark_mode</span>
