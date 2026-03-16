@@ -247,71 +247,117 @@ const Community = () => {
                     )}
 
                     {/* Actions */}
-                    <div className="flex items-center gap-5 pt-3 border-t border-slate-100 dark:border-white/5">
-                      <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.9 }}
+                    <div className="flex items-center gap-5 pt-4 border-t border-slate-200 dark:border-white/5">
+                      <motion.button whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}
                         onClick={() => handleLike(post)}
                         disabled={likingId === post._id}
-                        className={`flex items-center gap-2 text-sm font-bold transition-all ${isLiked(post) ? 'text-primary' : 'text-slate-400 hover:text-primary'}`}>
-                        <span className={`material-symbols-outlined text-lg ${isLiked(post) ? 'filled-icon' : ''}`}>favorite</span>
-                        {post.likes?.length || 0}
+                        className={`flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${isLiked(post) 
+                          ? 'text-primary bg-primary/10' 
+                          : 'text-slate-500 dark:text-slate-400 hover:text-primary hover:bg-primary/5'}`}>
+                        <span className={`material-symbols-outlined text-base ${isLiked(post) ? 'filled-icon' : ''}`}>favorite</span>
+                        <span className="font-bold">{post.likes?.length || 0}</span>
                       </motion.button>
-                      <button
-                        onClick={() => toggleComments(post._id)}
-                        className="flex items-center gap-2 text-sm font-bold text-slate-400 hover:text-primary transition-colors"
-                      >
-                        <span className="material-symbols-outlined text-lg">chat_bubble</span>
-                        {post.comments?.length || 0}
-                      </button>
-                    </div>
-
-                    {/* Comment input */}
-                    <div className="mt-4 flex items-start gap-2">
-                      <textarea
-                        value={commentInputs[post._id] || ''}
-                        onChange={(e) => handleCommentChange(post._id, e.target.value.slice(0, 500))}
-                        placeholder={isAuthenticated ? 'Write a comment...' : 'Sign in to comment...'}
-                        disabled={!isAuthenticated || commentingId === post._id}
-                        rows={2}
-                        className="flex-1 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl p-2.5 text-slate-800 dark:text-white placeholder:text-slate-400 resize-none focus:outline-none focus:ring-2 focus:ring-primary/40 text-sm"
-                      />
                       <motion.button
-                        whileHover={{ scale: 1.04 }}
-                        whileTap={{ scale: 0.96 }}
-                        onClick={() => handleComment(post._id)}
-                        disabled={!isAuthenticated || commentingId === post._id || !(commentInputs[post._id] || '').trim()}
-                        className="bg-primary text-background-dark px-4 py-2.5 rounded-xl text-sm font-bold disabled:opacity-40"
+                        whileHover={{ scale: 1.08 }}
+                        onClick={() => toggleComments(post._id)}
+                        className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-primary hover:bg-primary/5 transition-all"
                       >
-                        {commentingId === post._id ? '...' : 'Reply'}
+                        <span className="material-symbols-outlined text-base">chat_bubble</span>
+                        <span>{post.comments?.length || 0}</span>
                       </motion.button>
                     </div>
 
-                    {/* Comments list */}
-                    {(openComments[post._id] || (post.comments?.length || 0) > 0) && (
-                      <div className="mt-4 space-y-2">
-                        {(post.comments || []).length === 0 ? (
-                          <p className="text-xs text-slate-400">No comments yet.</p>
-                        ) : (
-                          (post.comments || []).map((comment) => (
-                            <div
-                              key={comment._id || `${comment.user?._id || 'u'}-${comment.createdAt}`}
-                              className="rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/10 p-3"
-                            >
-                              <div className="flex items-center gap-2 mb-1.5">
-                                <div className="h-6 w-6 rounded-full overflow-hidden border border-primary/20 bg-primary/10 shrink-0">
-                                  <img
-                                    className="h-full w-full object-cover"
-                                    src={comment.user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(comment.user?.name || 'c')}`}
-                                    alt={comment.user?.name || 'User'}
-                                  />
-                                </div>
-                                <p className="text-xs font-bold text-slate-700 dark:text-slate-200">{comment.user?.name || 'User'}</p>
-                                <p className="text-[11px] text-slate-400">{timeAgo(comment.createdAt)}</p>
-                              </div>
-                              <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{comment.text}</p>
+                    {/* Comments section container */}
+                    {(openComments[post._id] || (post.comments?.length || 0) > 0 || isAuthenticated) && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="mt-5 pt-5 border-t border-slate-200 dark:border-white/5 space-y-4"
+                      >
+                        {/* Comment input */}
+                        {isAuthenticated && (
+                          <div className="flex items-end gap-3">
+                            <div className="h-7 w-7 rounded-full overflow-hidden shrink-0 border border-primary/20 bg-gradient-to-br from-primary/20 to-primary/5">
+                              <img
+                                className="h-full w-full object-cover"
+                                src={user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user?.name || 'u')}`}
+                                alt={user?.name}
+                              />
                             </div>
-                          ))
+                            <div className="flex-1 flex gap-2">
+                              <textarea
+                                value={commentInputs[post._id] || ''}
+                                onChange={(e) => handleCommentChange(post._id, e.target.value.slice(0, 500))}
+                                placeholder="Share your thoughts..."
+                                disabled={commentingId === post._id}
+                                rows={2}
+                                className="flex-1 bg-gradient-to-br from-slate-50 to-slate-50/50 dark:from-white/7 dark:to-white/3 border border-slate-200 dark:border-white/10 rounded-2xl px-4 py-2.5 text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 resize-none focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-transparent text-sm leading-relaxed transition-all"
+                              />
+                              <motion.button
+                                whileHover={{ scale: 1.05, y: -1 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => handleComment(post._id)}
+                                disabled={commentingId === post._id || !(commentInputs[post._id] || '').trim()}
+                                className="bg-gradient-to-br from-primary to-primary/90 hover:from-primary/95 hover:to-primary/80 text-background-dark px-5 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-primary/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                              >
+                                {commentingId === post._id ? (
+                                  <span className="flex items-center gap-1.5">
+                                    <motion.span animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity }} className="inline-block">●</motion.span>
+                                  </span>
+                                ) : (
+                                  'Reply'
+                                )}
+                              </motion.button>
+                            </div>
+                          </div>
                         )}
-                      </div>
+
+                        {/* Comments list */}
+                        {openComments[post._id] && (
+                          <motion.div
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="space-y-3 mt-4"
+                          >
+                            {(post.comments || []).length === 0 ? (
+                              <div className="flex items-center justify-center py-6">
+                                <p className="text-xs font-medium text-slate-400 dark:text-slate-500">Be the first to reply!</p>
+                              </div>
+                            ) : (
+                              (post.comments || []).map((comment, idx) => (
+                                <motion.div
+                                  key={comment._id || `${comment.user?._id || 'u'}-${comment.createdAt}`}
+                                  initial={{ opacity: 0, y: -8 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  transition={{ delay: idx * 0.05 }}
+                                  whileHover={{ x: 2 }}
+                                  className="group rounded-2xl bg-gradient-to-br from-slate-50 to-slate-50/50 dark:from-white/5 dark:to-white/2 border border-slate-200 dark:border-white/8 p-3.5 hover:border-primary/30 hover:bg-gradient-to-br hover:from-primary/5 hover:to-slate-50/50 dark:hover:from-primary/10 dark:hover:to-white/5 transition-all"
+                                >
+                                  <div className="flex items-start gap-2.5">
+                                    <div className="h-7 w-7 rounded-full overflow-hidden shrink-0 border border-primary/20 bg-gradient-to-br from-primary/20 to-primary/5 flex-shrink-0">
+                                      <img
+                                        className="h-full w-full object-cover"
+                                        src={comment.user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(comment.user?.name || 'c')}`}
+                                        alt={comment.user?.name || 'User'}
+                                      />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-baseline gap-2 mb-1">
+                                        <p className="text-xs font-bold text-slate-800 dark:text-slate-100">{comment.user?.name || 'User'}</p>
+                                        <p className="text-[11px] font-medium text-slate-400 dark:text-slate-500">{timeAgo(comment.createdAt)}</p>
+                                      </div>
+                                      <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed break-words">{comment.text}</p>
+                                    </div>
+                                  </div>
+                                </motion.div>
+                              ))
+                            )}
+                          </motion.div>
+                        )}
+                      </motion.div>
                     )}
                   </div>
                 </motion.article>

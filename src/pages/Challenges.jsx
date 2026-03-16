@@ -363,15 +363,17 @@ const Challenges = () => {
               const imgSrc = CATEGORY_IMAGES[challenge.category] || CATEGORY_IMAGES.health;
 
               return (
-                <TiltCard key={challenge._id} intensity={8} scale={1.02}
-                  className="group flex flex-col bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-2xl hover:border-primary/30 transition-all duration-300 overflow-hidden">
+                <TiltCard key={challenge._id} intensity={5} scale={1.015}
+                  className="group flex flex-col bg-white/95 dark:bg-slate-800/95 rounded-2xl shadow-md border border-slate-200 dark:border-slate-700/80 hover:shadow-xl hover:shadow-primary/10 hover:border-primary/40 transition-all duration-500 overflow-hidden backdrop-blur-sm">
 
                   {/* Image */}
                   <div className="relative h-44 overflow-hidden">
-                    <motion.div whileHover={{ scale: 1.08 }} transition={{ duration: 0.5 }}
+                    <motion.div
+                      whileHover={{ scale: 1.03 }}
+                      transition={{ type: 'spring', stiffness: 90, damping: 20, mass: 0.7 }}
                       className="absolute inset-0 bg-cover bg-center"
                       style={{ backgroundImage: `url(${imgSrc})` }}>
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/20 to-transparent" />
                     </motion.div>
                     <div className="absolute top-3 left-3 flex items-center gap-2">
                       <span className="bg-primary/90 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider capitalize">{challenge.category}</span>
@@ -381,7 +383,7 @@ const Challenges = () => {
                         </span>
                       )}
                     </div>
-                    <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm text-slate-900 text-xs font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                    <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-md text-slate-900 text-xs font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
                       <span className="material-symbols-outlined text-xs">group</span>
                       {challenge.participants?.length || 0}
                     </div>
@@ -397,12 +399,12 @@ const Challenges = () => {
                   <div className="p-5 flex flex-col flex-1">
                     <div className="flex items-start gap-2 mb-2">
                       <span className="material-symbols-outlined text-primary text-xl mt-0.5">{challenge.icon || 'emoji_events'}</span>
-                      <h3 className="text-slate-900 dark:text-white text-lg font-bold leading-snug">{challenge.title}</h3>
+                      <h3 className="text-slate-900 dark:text-white text-lg font-extrabold leading-snug tracking-tight">{challenge.title}</h3>
                     </div>
-                    <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-4 flex-1 line-clamp-2">{challenge.description}</p>
+                    <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed mb-4 flex-1 line-clamp-2">{challenge.description}</p>
 
                     {/* Stats row — visible to everyone */}
-                    <div className="flex items-center gap-3 text-xs text-slate-400 mb-4">
+                    <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400 mb-4">
                       <span className="flex items-center gap-1">
                         <span className="material-symbols-outlined text-[14px]">schedule</span>{challenge.duration} days
                       </span>
@@ -419,12 +421,13 @@ const Challenges = () => {
                     {/* Action row */}
                     <div className="flex gap-2">
                       {/* Join/Leave */}
-                      <motion.button whileHover={{ scale: 1.02, y: -1 }} whileTap={{ scale: 0.98 }}
+                      <motion.button whileHover={{ scale: 1.015, y: -1 }} whileTap={{ scale: 0.99 }}
                         onClick={() => handleJoinLeave(challenge)}
                         disabled={joiningId === challenge._id}
-                        className={`flex-1 py-2.5 rounded-full font-bold text-sm transition-all flex items-center justify-center gap-1.5 ${joined
+                        transition={{ type: 'spring', stiffness: 140, damping: 16 }}
+                        className={`flex-1 py-2.5 rounded-full font-bold text-sm transition-all duration-300 flex items-center justify-center gap-1.5 ${joined
                           ? 'bg-red-50 dark:bg-red-900/20 text-red-500 border border-red-200 dark:border-red-800 hover:bg-red-100'
-                          : 'bg-primary text-white shadow-md shadow-primary/20 hover:bg-primary/90'
+                          : 'bg-primary text-white shadow-md shadow-primary/25 hover:bg-primary/90'
                           } disabled:opacity-50`}>
                         {joiningId === challenge._id
                           ? <><span className="material-symbols-outlined text-sm animate-spin">refresh</span> Processing...</>
@@ -435,10 +438,11 @@ const Challenges = () => {
                       </motion.button>
 
                       {/* Like button */}
-                      <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.85 }}
+                      <motion.button whileHover={{ scale: 1.05, y: -1 }} whileTap={{ scale: 0.96 }}
                         onClick={() => handleLike(challenge)}
                         disabled={likingId === challenge._id}
                         title={isAuthenticated ? (isUserLiked(challenge) ? 'Unlike' : 'Like') : 'Sign in to like'}
+                        transition={{ type: 'spring', stiffness: 180, damping: 15 }}
                         className={`w-11 h-11 rounded-full flex items-center justify-center border transition-all disabled:opacity-50 ${isUserLiked(challenge)
                           ? 'bg-rose-50 dark:bg-rose-900/20 border-rose-300 dark:border-rose-700 text-rose-500'
                           : 'bg-slate-50 dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-400 hover:border-rose-300 hover:text-rose-400'
@@ -447,10 +451,11 @@ const Challenges = () => {
                       </motion.button>
 
                       {/* Wishlist button */}
-                      <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.85 }}
+                      <motion.button whileHover={{ scale: 1.05, y: -1 }} whileTap={{ scale: 0.96 }}
                         onClick={() => handleWishlist(challenge)}
                         disabled={wishlistingId === challenge._id}
                         title={isAuthenticated ? (isUserWishlisted(challenge) ? 'Remove from wishlist' : 'Save to wishlist') : 'Sign in to save'}
+                        transition={{ type: 'spring', stiffness: 180, damping: 15 }}
                         className={`w-11 h-11 rounded-full flex items-center justify-center border transition-all disabled:opacity-50 ${isUserWishlisted(challenge)
                           ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-300 dark:border-amber-700 text-amber-500'
                           : 'bg-slate-50 dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-400 hover:border-amber-300 hover:text-amber-400'
